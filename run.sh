@@ -1,45 +1,29 @@
 #!/bin/bash                                                                                                  
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
-
-read -e -p "请输入链接端口(默认443) :" port
+read -e -p "请输入链接端口(默认3763) :" port
 if [[ -z "${port}" ]]; then
-port="443"
+port="3763"
 fi
 
-read -e -p "请输入密码(默认随机生成) :" secret
-if [[ -z "${secret}" ]]; then
 secret=$(cat /proc/sys/kernel/random/uuid |sed 's/-//g')
+read -e -p "请输入密码(默认随机生成) :" secret
 echo -e "密码："
 echo -e "$secret"
 fi
 
-read -e -p "请输入伪装域名(默认www.microsoft.com) :" domain
-if [[ -z "${domain}" ]]; then
-domain="www.microsoft.com"
-fi
-read -rp "你需要TAG标签吗(Y/N): " chrony_install
-    [[ -z ${chrony_install} ]] && chrony_install="Y"
-    case $chrony_install in
-    [yY][eE][sS] | [yY])
-        read -e -p "请输入TAG:" tag
-        if [[ -z "${tag}" ]]; then
-        echo "请输入TAG"
-        fi
-        echo -e "正在安装依赖: Docker... "
-        echo y | bash <(curl -L -s https://raw.githubusercontent.com/xb0or/nginx-mtproxy/main/docker.sh)
-        echo -e "正在安装nginx-mtproxy... "
-        docker run --name nginx-mtproxy -d -e tag="$tag" -e secret="$secret" -e domain="$domain" -p 80:80 -p $port:$port ellermister/nginx-mtproxy:latest
+       
+      echo -e "正在安装依赖: Docker... "
+      echo y | bash <(curl -L -s https://raw.githubusercontent.com/xb0or/nginx-mtproxy/main/docker.sh)
+      echo -e "正在安装nginx-mtproxy... "
+      docker run --name nginx-mtproxy -d -e secret="$secret" -p 80:80 -p $port:$port ellermister/nginx-mtproxy:latest
         ;;
     *)
 echo -e "正在安装依赖: Docker... "
 echo y | bash <(curl -L -s https://cdn.jsdelivr.net/gh/xb0or/nginx-mtproxy@main/docker.sh)
 
 echo -e "正在安装nginx-mtproxy... "
-docker run --name nginx-mtproxy -d -e secret="$secret" -e domain="$domain" -p 81:80 -p $port:443 ellermister/nginx-mtproxy:latest
+docker run --name nginx-mtproxy -d -e secret="$secret" -p 81:80 -p $port:3763 ellermister/nginx-mtproxy:latest
         ;;
     esac
-
-
 
 echo -e "正在设置开机自启动... "
 docker update --restart=always nginx-mtproxy
